@@ -86,7 +86,6 @@
                         void messageR()
                         {
 
-                            // Check TDS value and send SMS if necessary
                             if (int.Parse(data["TDS"]) > 800)
                             {
                                 if (!isFunctionInvoked)
