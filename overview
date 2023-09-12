@@ -1,0 +1,16 @@
+MY application provides real-time monitoring of water quality in reverse osmosis machines using data from a Firebase database.
+The application retrieves values such as
+/////
+pH level
+total dissolved solids (TDS)
+temperature
+pressure
+other...
+/////
+With the information retrieved from the database, the application performs calculations to determine the current state of the machine.
+The application uses these values to detect potential issues and alerts users if any anomalies are detected.
+
+The dashboard displays a range of information about the machine, including the current state, 
+water quality metrics, and historical data. Users can monitor the performance of their machines, 
+track changes in water quality over time, and identify any issues that may arise. Additionally, 
+the dashboard includes a visual representation of the water quality metrics, making it easy to understand the data at a glance.
