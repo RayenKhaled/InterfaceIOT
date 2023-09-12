@@ -1,0 +1,377 @@
+
+        async void Livecall()
+        {
+            while (true)
+            {
+
+                try
+                {
+                    FirebaseResponse res = await client.GetAsync(@"sensors");
+                    Dictionary<string, string> data = JsonConvert.DeserializeObject<Dictionary<string, string>>(res.Body.ToString());
+
+                    if (data != null)
+                    {
+
+                        long bytesSent = 0;
+                        long bytesReceived = 0;
+                        NetworkInterface[] interfaces = NetworkInterface.GetAllNetworkInterfaces();
+
+                        foreach (NetworkInterface ni in interfaces)
+                        {
+                            bytesSent += ni.GetIPv4Statistics().BytesSent;
+                            bytesReceived += ni.GetIPv4Statistics().BytesReceived;
+                        }
+
+                        float totalBytes = 0 + bytesReceived;
+                        float totalKb = totalBytes / 1024;
+
+                        string formattedTotal;
+
+                        if (totalKb > 1024 * 1024) 
+                        {
+                            formattedTotal = string.Format("{0:0.00} GB", totalKb / (1024 * 1024));
+                        }
+                        else if (totalKb > 1024) 
+                        {
+                            formattedTotal = string.Format("{0:0.00} MB", totalKb / 1024);
+                        }
+                        else 
+                        {
+                            formattedTotal = string.Format("{0:0.00} KB", totalKb);
+                        }
+
+                        consbyte.Text = formattedTotal;
+
+
+
+                        TDSvalue.Text = data["TDS"] + " PPM";
+                        TEMPvalue.Text = data["temperature"] +" C°";
+                        PAVvalue.Text = data["pressionAV"] + " bars";
+                        PAMvalue.Text = data["pressionAM"] + " bars";
+                        pHvalue.Text = data["PH"];
+                        CURRENTvalue.Text = data["courant"] + " A";
+                        TDSvalue1.Text = data["TDS"];
+                        TEMPvalue1.Text = data["temperature"] + " C°";
+                        PAVvalue1.Text = data["pressionAV"] + " bars";
+                        PAMvalue1.Text = data["pressionAM"] + " bars";
+                        PHvalue1.Text = data["PH"];
+
+                        CURRENTvalue1.Text = data["courant"] + " A";
+
+                        decimal argentValue = decimal.Parse(data["argent"]);
+                        if (argentValue >= 1000)
+                        {
+                            MONEYvalue.Text = string.Format("{0:#,##0.###} DT", argentValue / 1000m);
+                        }
+                        else
+                        {
+                            MONEYvalue.Text = string.Format("{0:#,##0} milim", argentValue);
+                        }
+                        ARGENTfakevalue.Text = argentValue.ToString();
+                        string OWATERvalueString = (argentValue / 200m * 1.5m).ToString();
+                        OWATERvalue.Text = OWATERvalueString + " L";
+
+                        string waterValueString = ((argentValue / 200m) * 1.55m).ToString();
+                        SWATERvalue.Text = waterValueString + " L";
+
+                        tdscalcloop();
+                        current();
+                        level();
+                        bunifuDropdown();
+                        radial_animation();
+                        messageR();
+                        temp();
+
+
+                        void messageR()
+                        {
+
+                            // Check TDS value and send SMS if necessary
+                            if (int.Parse(data["TDS"]) > 800)
+                            {
+                                if (!isFunctionInvoked)
+                                {
+                                    string message = "please check the membrane ";
+                                    SendMessage("+21651933223", message);
+                                    isFunctionInvoked = true;
+                                }
+                            }
+                            else
+                            {
+                                isFunctionInvoked = false;
+                            }
+                        }
+
+                        void radial_animation()
+                        {
+                            string input = PAMvalue1.Text;
+                            string pattern = @"\d+"; // regular expression to match one or more digits
+                            Match match = Regex.Match(input, pattern); // search for a match in the input string
+                            if (match.Success)
+                            {
+                                Radial();
+                                string numberString = match.Value; // get the matched digits as a string
+                                int number = int.Parse(numberString); // parse the string as an integer
+                                RADIALGAUGEvalueAM.Value = number;
+
+                                if (number < 5)
+                                {
+                                    RADIALGAUGEvalueAM.ProgressColorLow = Color.DodgerBlue;
+                                }
+                                else if (number >= 5 && number < 8)
+                                {
+                                    RADIALGAUGEvalueAM.ProgressColorLow = Color.Yellow;
+                                }
+                                else
+                                {
+                                    RADIALGAUGEvalueAM.ProgressColorLow = Color.Red;
+                                }
+
+                            }
+
+
+                            string input1 = PAVvalue1.Text;
+                            string pattern1 = @"\d+"; // regular expression to match one or more digits
+                            Match match1 = Regex.Match(input1, pattern1); // search for a match in the input string
+
+
+                            if (match1.Success)
+                            {
+                                Radial();
+                                string numberString = match1.Value; // get the matched digits as a string
+                                int number = int.Parse(numberString); // parse the string as an integer
+                                RADIALGAUGEvalueAV.Value = number;
+                                if (number < 5)
+                                {
+                                    RADIALGAUGEvalueAV.ProgressColorLow = Color.DodgerBlue;
+                                }
+                                else if (number >= 5 && number < 8)
+                                {
+                                    RADIALGAUGEvalueAV.ProgressColorLow = Color.Yellow;
+                                }
+                                else
+                                {
+                                    RADIALGAUGEvalueAV.ProgressColorLow = Color.Red;
+                                }
+
+
+                            }
+                        }
+
+                        void level()
+                        {
+                            string LVV = data["niveauD"];
+
+
+                            Random rnd = new Random();
+                            int Y = rnd.Next(150, 170);
+
+
+
+                            int LV = int.Parse(LVV);
+
+                            //WATERpanel.Size = new Size(360, LV);
+                            if (LV >= 0 && LV <= 10)
+                            {
+                                WATERpanel.Size = new Size(360, 50);
+
+                                wave.Location = new Point(10, -10);
+                                wave.Size = new Size(339, Y);
+
+                                int number = 100; string NS = number.ToString();
+                                WATERLEVELvalue.Text = NS + " %";
+                                WATERLEVELvalue1.Text = NS + " %";
+                            } //100%
+
+                            else if (LV > 10 && LV <= 15)
+                            {
+                                WATERpanel.Size = new Size(360, 100);
+
+                                wave.Location = new Point(10, 30);
+                                wave.Size = new Size(339, Y);
+
+                                int number = 80; string NS = number.ToString();
+                                WATERLEVELvalue.Text = NS + " %";
+                                WATERLEVELvalue1.Text = NS + " %";
+                            }//80%
+
+                            else if (LV > 15 && LV <= 20)
+                            {
+                                WATERpanel.Size = new Size(360, 200);
+
+                                wave.Location = new Point(10, 130);
+                                wave.Size = new Size(339, Y);
+
+                                int number = 60; string NS = number.ToString();
+                                WATERLEVELvalue.Text = NS + " %";
+                                WATERLEVELvalue1.Text = NS + " %";
+                            }//60%
+
+                            else if (LV > 20 && LV <= 30)
+                            {
+                                WATERpanel.Size = new Size(360, 300);
+
+                                wave.Location = new Point(10, 230);
+                                wave.Size = new Size(339, Y);
+
+                                int number = 50;
+                                string NS = number.ToString();
+                                WATERLEVELvalue.Text = NS + " %";
+                                WATERLEVELvalue1.Text = NS + " %";
+                            }//50%
+
+                            else if (LV > 30 && LV <= 35)
+                            {
+                                WATERpanel.Size = new Size(360, 400);
+                                wave.Location = new Point(10, 330);
+                                wave.Size = new Size(339, Y);
+                                int number = 40;
+                                string NS = number.ToString();
+                                WATERLEVELvalue.Text = NS + " %";
+                                WATERLEVELvalue1.Text = NS + " %";
+                            }//40%
+                            else if (LV > 35 && LV <= 40)
+                            {
+                                WATERpanel.Size = new Size(360, 500);
+                                wave.Location = new Point(10, 430);
+                                wave.Size = new Size(339, Y);
+                                int number = 20; string NS = number.ToString();
+                                WATERLEVELvalue.Text = NS + " %";
+                                WATERLEVELvalue1.Text = NS + " %";
+                            }//20% 
+                            else if (LV > 40)
+                            {
+                                WATERpanel.Size = new Size(360, 550);
+                                wave.Location = new Point(10, 550);
+                                wave.Size = new Size(339, Y);
+                                int number = 0; string NS = number.ToString();
+                                WATERLEVELvalue.Text = NS + " %";
+                                WATERLEVELvalue1.Text = NS + " %";
+                            }//0% 
+                        }
+                        
+                        
+                        void Radial()
+                        {
+                            string textValueA = data["pressionAM"];
+                            string textValueB = data["pressionAV"];
+
+                            // Set the culture to one that uses a comma as the decimal separator
+                            CultureInfo culture = new CultureInfo("fr-FR");
+
+                            // Replace the dot with a comma
+                            textValueA = textValueA.Replace(".", ",");
+                            textValueB = textValueB.Replace(".", ",");
+
+                            // Parse the float values using the specified culture
+                            float am = float.Parse(textValueA, culture);
+                            float av = float.Parse(textValueB, culture);
+
+                            if ((am - av) < 0.2)
+                            {
+                                STATEvalueF.Text = "bon!";
+                                STATEbackF.BackColor = Color.Green;
+                            }
+                            else if ((am - av) > 0.2)
+                            {
+                                STATEvalueF.Text = "attention!";
+                                STATEbackF.BackColor = Color.Red;
+                            }
+                        }
+
+                       void tdscalcloop()
+                        {
+                            string tdsv = data["TDS"];
+                            int calctds = int.Parse(tdsv);
+                            calc_tds(calctds);
+                            if (calctds < 350)
+                            {
+                                STATEvalueM.Text = "bon!";
+                                STATEbackM.BackColor = Color.Green;
+                            }
+                            else if (calctds >= 350 && calctds < 500)
+                            {
+                                STATEvalueM.Text = "normale!";
+                                STATEbackM.BackColor = Color.Yellow;
+                            }
+                            else if (calctds >= 500 && calctds <= 700)
+                            {
+                                STATEvalueM.Text = "attention!";
+                                STATEbackM.BackColor = Color.Red;
+                            }
+
+                            else if (calctds > 700)
+                            {
+                                SHIFTvalue.Location = new Point(600, 65);
+
+                                STATEvalueM.Text = "attention!";
+                                STATEbackM.BackColor = Color.Red;
+                            }
+                        }
+
+                     void current()
+                        {
+
+
+                            float voltage = 12;
+
+                            string textValuec = data["courant"];
+                            CultureInfo culture = new CultureInfo("fr-FR");
+                            textValuec = textValuec.Replace(".", ",");
+                            float currentV = float.Parse(textValuec, culture);
+
+                            float timeInterval = 1; // in seconds (assuming we update every second)
+                            float power = voltage * currentV; // in watts
+                            float energy = (power * timeInterval) / 3600; // in watt-hours
+                            energyConsumed += energy;
+
+                            // Update the energy label with the new value
+                            POWERvalue.Text = energyConsumed.ToString("0.00") + " Wh";
+                        }
+
+                       void temp()
+                        {
+                            string temperature = data["temperature"]; // get the temperature value as a string
+                            string[] parts = temperature.Split('c'); // split the string at the 'c' character
+                            if (int.TryParse(parts[0], out int TEV))
+                            {
+                                if (TEV < 21)
+                                {
+                                    temppic0.Show();
+                                    temppic1.Hide();
+                                    temppic2.Hide();
+                                    temppic3.Hide();
+                                }
+                                else if (21 <= TEV && TEV <= 25)
+                                {
+                                    temppic0.Hide();
+                                    temppic1.Show();
+                                    temppic2.Hide();
+                                    temppic3.Hide();
+                                }
+                                else if (26 <= TEV && TEV <= 30)
+                                {
+                                    temppic0.Hide();
+                                    temppic1.Hide();
+                                    temppic2.Show();
+                                    temppic3.Hide();
+                                }
+                                else if (TEV > 35)
+                                {
+                                    temppic0.Hide();
+                                    temppic1.Hide();
+                                    temppic2.Hide();
+                                    temppic3.Show();
+                                }
+                            }
+                        }
+
+
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                }
+            }
+        }
