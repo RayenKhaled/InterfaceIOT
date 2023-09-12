@@ -1,0 +1,38 @@
+ private void Form1_Load(object sender, EventArgs e)
+        {
+            while (true)
+            {
+                try
+                {
+                    client = new FireSharp.FirebaseClient(config);
+                    var task = client.GetAsync(@"sensors");
+                    task.Wait();
+                    var res = task.Result;
+                    CONNECTvalue.ForeColor = Color.Green;
+                    wifiiconG.Show();
+                    wifiiconR.Hide();
+                    Livecall();
+                    btnfan_Click_1(this, EventArgs.Empty);
+                    btnmotor_Click(this, EventArgs.Empty);
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    if (ex is SocketException socketException)
+                    {
+                        var result = MessageBox.Show("There was an error connecting to the server. Please check your internet connection and try again." +
+                            "\n\nWould you like to try again?", "Error internet", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                        System.Threading.Tasks.Task.Delay(5000).Wait();
+                    }
+                    else
+                    {
+                        var result = MessageBox.Show("There was an error: " + ex.Message + "\n\nWould you like to try again?", "Error internet", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        System.Threading.Tasks.Task.Delay(5000).Wait();
+                    }
+
+                
+              
+                }
+            }
+        }
